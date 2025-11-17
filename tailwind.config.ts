@@ -80,12 +80,33 @@ export default {
             height: "0",
           },
         },
+        aurora: {
+          from: {
+            backgroundPosition: "50% 50%, 50% 50%",
+          },
+          to: {
+            backgroundPosition: "350% 50%, 350% 50%",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        aurora: "aurora 60s linear infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    function ({ addBase, theme }: any) {
+      let allColors = Object.entries(theme("colors")).flatMap(([key, val]: [string, any]) =>
+        typeof val === "object"
+          ? Object.entries(val).map(([subKey, subVal]) => [`--${key}-${subKey}`, subVal])
+          : [[`--${key}`, val]]
+      );
+      addBase({
+        ":root": Object.fromEntries(allColors),
+      });
+    },
+  ],
 } satisfies Config;
