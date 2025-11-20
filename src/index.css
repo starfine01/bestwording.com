@@ -8,92 +8,92 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 35 20% 98%;
+    --foreground: 30 15% 20%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 35 25% 99%;
+    --card-foreground: 30 15% 20%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 35 20% 99%;
+    --popover-foreground: 30 15% 20%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 35 25% 45%;
+    --primary-foreground: 35 20% 98%;
 
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 35 15% 95%;
+    --secondary-foreground: 30 20% 25%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 35 10% 94%;
+    --muted-foreground: 30 10% 50%;
 
-    --accent: 263 70% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 40 20% 55%;
+    --accent-foreground: 35 20% 98%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 35 20% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    --border: 35 15% 88%;
+    --input: 35 15% 88%;
+    --ring: 35 25% 45%;
 
     --radius: 0.75rem;
     
-    --hero-gradient: linear-gradient(135deg, hsl(217 91% 60%), hsl(263 70% 50%));
+    --hero-gradient: linear-gradient(135deg, hsl(35 25% 45%), hsl(40 20% 55%));
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 35 18% 97%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-foreground: 30 15% 30%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 35 25% 45%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary-foreground: 35 20% 98%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 35 12% 93%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-accent-foreground: 30 20% 25%;
 
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 35 15% 88%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 35 25% 45%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 30 15% 12%;
+    --foreground: 35 20% 92%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 30 15% 14%;
+    --card-foreground: 35 20% 92%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 30 15% 14%;
+    --popover-foreground: 35 20% 92%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 35 25% 55%;
+    --primary-foreground: 30 15% 12%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 30 12% 18%;
+    --secondary-foreground: 35 20% 92%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 30 10% 20%;
+    --muted-foreground: 35 15% 65%;
 
-    --accent: 263 70% 50%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 40 20% 60%;
+    --accent-foreground: 30 15% 12%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 35 20% 92%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 30 12% 22%;
+    --input: 30 12% 22%;
+    --ring: 35 25% 55%;
+    --sidebar-background: 30 15% 14%;
+    --sidebar-foreground: 35 20% 88%;
+    --sidebar-primary: 35 25% 55%;
+    --sidebar-primary-foreground: 30 15% 12%;
+    --sidebar-accent: 30 10% 20%;
+    --sidebar-accent-foreground: 35 20% 88%;
+    --sidebar-border: 30 12% 22%;
+    --sidebar-ring: 35 25% 55%;
   }
 }
 
@@ -104,5 +104,31 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'NanumBarunGothic', 'Noto Sans KR', sans-serif;
   }
+}
+
+/* Aptta 폰트 정의 */
+@font-face {
+  font-family: 'Aptta';
+  src: url('/fonts/Aptta-Regular.woff2') format('woff2'),
+       url('/fonts/Aptta-Regular.woff') format('woff'),
+       url('/fonts/Aptta-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aptta';
+  src: url('/fonts/Aptta-Bold.woff2') format('woff2'),
+       url('/fonts/Aptta-Bold.woff') format('woff'),
+       url('/fonts/Aptta-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+.best-wording-title {
+  font-family: 'Aptta', 'NanumBarunGothic', sans-serif;
 }
