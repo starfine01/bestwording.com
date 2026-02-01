@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getCurrentUser } from "@/lib/auth";
-import { getGoals, saveGoal, updateGoal, deleteGoal, Goal } from "@/lib/storage";
+import { Goal } from "@/lib/storage";
+import { getGoalsAsync, saveGoalAsync, updateGoalAsync, deleteGoalAsync } from "@/lib/storageHybrid";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Target, Edit, Trash2, Save, X } from "lucide-react";
 import {
@@ -32,12 +33,21 @@ const GoalsPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadGoals();
+    void loadGoals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadGoals = () => {
-    const userGoals = getGoals(user?.id || null);
-    setGoals(userGoals);
+  const loadGoals = async () => {
+    try {
+      const userGoals = await getGoalsAsync(user?.id || null);
+      setGoals(userGoals);
+    } catch (err: any) {
+      toast({
+        title: "불러오기 실패",
+        description: err?.message ?? "목표 목록을 불러오지 못했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNew = () => {
@@ -67,7 +77,7 @@ const GoalsPage = () => {
     setProgress(0);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !targetDate) {
       toast({
         title: "오류",
@@ -77,43 +87,67 @@ const GoalsPage = () => {
       return;
     }
 
-    if (editingId) {
-      updateGoal(editingId, { title, description, targetDate, progress });
+    try {
+      if (editingId) {
+        await updateGoalAsync(editingId, user?.id || null, { title, description, targetDate, progress });
+        toast({
+          title: "수정 완료",
+          description: "목표가 수정되었습니다.",
+        });
+      } else {
+        await saveGoalAsync({
+          userId: user?.id || null,
+          title,
+          description,
+          targetDate,
+          progress,
+        });
+        toast({
+          title: "저장 완료",
+          description: "목표가 저장되었습니다.",
+        });
+      }
+
+      await loadGoals();
+      handleCancel();
+    } catch (err: any) {
       toast({
-        title: "수정 완료",
-        description: "목표가 수정되었습니다.",
-      });
-    } else {
-      saveGoal({
-        userId: user?.id || null,
-        title,
-        description,
-        targetDate,
-        progress,
-      });
-      toast({
-        title: "저장 완료",
-        description: "목표가 저장되었습니다.",
+        title: "저장 실패",
+        description: err?.message ?? "저장 중 오류가 발생했습니다.",
+        variant: "destructive",
       });
     }
-
-    loadGoals();
-    handleCancel();
   };
 
-  const handleProgressUpdate = (id: string, newProgress: number) => {
-    updateGoal(id, { progress: newProgress });
-    loadGoals();
+  const handleProgressUpdate = async (id: string, newProgress: number) => {
+    try {
+      await updateGoalAsync(id, user?.id || null, { progress: newProgress });
+      await loadGoals();
+    } catch (err: any) {
+      toast({
+        title: "업데이트 실패",
+        description: err?.message ?? "진척도 업데이트 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteGoal(id);
-    toast({
-      title: "삭제 완료",
-      description: "목표가 삭제되었습니다.",
-    });
-    loadGoals();
-    setDeleteId(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteGoalAsync(id, user?.id || null);
+      toast({
+        title: "삭제 완료",
+        description: "목표가 삭제되었습니다.",
+      });
+      await loadGoals();
+      setDeleteId(null);
+    } catch (err: any) {
+      toast({
+        title: "삭제 실패",
+        description: err?.message ?? "삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

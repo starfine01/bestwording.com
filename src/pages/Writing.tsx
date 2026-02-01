@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentUser } from "@/lib/auth";
-import { getWritings, saveWriting, updateWriting, deleteWriting, Writing } from "@/lib/storage";
+import { Writing } from "@/lib/storage";
+import { getWritingsAsync, saveWritingAsync, updateWritingAsync, deleteWritingAsync } from "@/lib/storageHybrid";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import {
@@ -42,12 +43,21 @@ const WritingPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadWritings();
+    void loadWritings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadWritings = () => {
-    const userWritings = getWritings(user?.id || null);
-    setWritings(userWritings);
+  const loadWritings = async () => {
+    try {
+      const userWritings = await getWritingsAsync(user?.id || null);
+      setWritings(userWritings);
+    } catch (err: any) {
+      toast({
+        title: "불러오기 실패",
+        description: err?.message ?? "글 목록을 불러오지 못했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNew = () => {
@@ -74,7 +84,7 @@ const WritingPage = () => {
     setGenre("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !content.trim() || !genre) {
       toast({
         title: "오류",
@@ -84,37 +94,53 @@ const WritingPage = () => {
       return;
     }
 
-    if (editingId) {
-      updateWriting(editingId, { title, content, genre });
+    try {
+      if (editingId) {
+        await updateWritingAsync(editingId, user?.id || null, { title, content, genre });
+        toast({
+          title: "수정 완료",
+          description: "글이 수정되었습니다.",
+        });
+      } else {
+        await saveWritingAsync({
+          userId: user?.id || null,
+          title,
+          content,
+          genre,
+        });
+        toast({
+          title: "저장 완료",
+          description: "글이 저장되었습니다.",
+        });
+      }
+
+      await loadWritings();
+      handleCancel();
+    } catch (err: any) {
       toast({
-        title: "수정 완료",
-        description: "글이 수정되었습니다.",
-      });
-    } else {
-      saveWriting({
-        userId: user?.id || null,
-        title,
-        content,
-        genre,
-      });
-      toast({
-        title: "저장 완료",
-        description: "글이 저장되었습니다.",
+        title: "저장 실패",
+        description: err?.message ?? "저장 중 오류가 발생했습니다.",
+        variant: "destructive",
       });
     }
-
-    loadWritings();
-    handleCancel();
   };
 
-  const handleDelete = (id: string) => {
-    deleteWriting(id);
-    toast({
-      title: "삭제 완료",
-      description: "글이 삭제되었습니다.",
-    });
-    loadWritings();
-    setDeleteId(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteWritingAsync(id, user?.id || null);
+      toast({
+        title: "삭제 완료",
+        description: "글이 삭제되었습니다.",
+      });
+      await loadWritings();
+      setDeleteId(null);
+    } catch (err: any) {
+      toast({
+        title: "삭제 실패",
+        description: err?.message ?? "삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
-import { getAdminMessages, saveAdminMessage, updateAdminMessage, deleteAdminMessage, AdminMessage } from "@/lib/storage";
+import { AdminMessage } from "@/lib/storage";
+import { getAdminMessagesAsync, saveAdminMessageAsync, updateAdminMessageAsync, deleteAdminMessageAsync } from "@/lib/storageHybrid";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Save, X, Mail, User, Calendar, MessageSquare } from "lucide-react";
 import {
@@ -33,18 +34,20 @@ const AdminMessagePage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadMessages();
+    void loadMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadMessages = () => {
-    if (isUserAdmin) {
-      // 관리자는 모든 메시지 조회
-      const allMessages = getAdminMessages();
-      setMessages(allMessages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } else {
-      // 일반 사용자는 자신의 메시지만 조회
-      const userMessages = getAdminMessages(user?.id || null);
-      setMessages(userMessages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  const loadMessages = async () => {
+    try {
+      const loaded = await getAdminMessagesAsync(user?.id || null, isUserAdmin);
+      setMessages(loaded.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (err: any) {
+      toast({
+        title: "불러오기 실패",
+        description: err?.message ?? "메시지를 불러오지 못했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -65,11 +68,13 @@ const AdminMessagePage = () => {
     setAdminReply(message.adminReply || "");
   };
 
-  const handleView = (message: AdminMessage) => {
+  const handleView = async (message: AdminMessage) => {
     setViewingId(message.id);
+    // NOTE: admin read-state update via Supabase는 다음 단계(서비스 롤/API)에서 처리.
     if (isUserAdmin && !message.isRead) {
-      updateAdminMessage(message.id, { isRead: true });
-      loadMessages();
+      // keep legacy behavior for now
+      await updateAdminMessageAsync(message.id, user?.id || null, isUserAdmin, { isRead: true } as any);
+      await loadMessages();
     }
   };
 
@@ -82,7 +87,7 @@ const AdminMessagePage = () => {
     setAdminReply("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim() || !content.trim()) {
       toast({
         title: "오류",
@@ -92,49 +97,80 @@ const AdminMessagePage = () => {
       return;
     }
 
-    if (editingId) {
-      // 수정
-      if (isUserAdmin) {
-        // 관리자는 답변도 수정 가능
-        updateAdminMessage(editingId, { title, content, adminReply: adminReply || undefined });
+    try {
+      if (editingId) {
+        // 수정
+        await updateAdminMessageAsync(editingId, user?.id || null, isUserAdmin, {
+          title,
+          content,
+          adminReply: adminReply || undefined,
+        } as any);
+        toast({
+          title: "수정 완료",
+          description: "메시지가 수정되었습니다.",
+        });
       } else {
-        // 일반 사용자는 자신의 메시지만 수정
-        updateAdminMessage(editingId, { title, content });
+        // 새 메시지 작성
+        const created = await saveAdminMessageAsync({
+          userId: user?.id || null,
+          userName: user?.name || null,
+          userEmail: user?.email || null,
+          title,
+          content,
+        });
+
+        // 메일 알림(best-effort)
+        try {
+          await fetch("/api/notify-admin-message", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              title: created.title,
+              content: created.content,
+              userEmail: created.userEmail,
+              userName: created.userName,
+            }),
+          });
+        } catch {
+          // ignore
+        }
+
+        toast({
+          title: "전송 완료",
+          description: "운영진에게 메시지가 전송되었습니다.",
+        });
       }
+
+      await loadMessages();
+      handleCancel();
+    } catch (err: any) {
       toast({
-        title: "수정 완료",
-        description: "메시지가 수정되었습니다.",
-      });
-    } else {
-      // 새 메시지 작성
-      saveAdminMessage({
-        userId: user?.id || null,
-        userName: user?.name || null,
-        userEmail: user?.email || null,
-        title,
-        content,
-      });
-      toast({
-        title: "전송 완료",
-        description: "운영진에게 메시지가 전송되었습니다.",
+        title: "저장 실패",
+        description: err?.message ?? "처리 중 오류가 발생했습니다.",
+        variant: "destructive",
       });
     }
-
-    loadMessages();
-    handleCancel();
   };
 
-  const handleDelete = (id: string) => {
-    deleteAdminMessage(id);
-    toast({
-      title: "삭제 완료",
-      description: "메시지가 삭제되었습니다.",
-    });
-    loadMessages();
-    setDeleteId(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAdminMessageAsync(id, user?.id || null, isUserAdmin);
+      toast({
+        title: "삭제 완료",
+        description: "메시지가 삭제되었습니다.",
+      });
+      await loadMessages();
+      setDeleteId(null);
+    } catch (err: any) {
+      toast({
+        title: "삭제 실패",
+        description: err?.message ?? "삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleReply = (messageId: string) => {
+  const handleReply = async (messageId: string) => {
     if (!adminReply.trim()) {
       toast({
         title: "오류",
@@ -144,20 +180,28 @@ const AdminMessagePage = () => {
       return;
     }
 
-    updateAdminMessage(messageId, {
-      adminReply,
-      adminReplyAt: new Date().toISOString(),
-      isRead: true,
-    });
+    try {
+      await updateAdminMessageAsync(messageId, user?.id || null, isUserAdmin, {
+        adminReply,
+        adminReplyAt: new Date().toISOString(),
+        isRead: true,
+      } as any);
 
-    toast({
-      title: "답변 완료",
-      description: "답변이 저장되었습니다.",
-    });
+      toast({
+        title: "답변 완료",
+        description: "답변이 저장되었습니다.",
+      });
 
-    loadMessages();
-    setAdminReply("");
-    setViewingId(null);
+      await loadMessages();
+      setAdminReply("");
+      setViewingId(null);
+    } catch (err: any) {
+      toast({
+        title: "답변 실패",
+        description: err?.message ?? "답변 저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const viewingMessage = messages.find(m => m.id === viewingId);

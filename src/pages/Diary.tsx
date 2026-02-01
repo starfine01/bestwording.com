@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentUser } from "@/lib/auth";
-import { getDiaries, saveDiary, updateDiary, deleteDiary, Diary } from "@/lib/storage";
+import { Diary } from "@/lib/storage";
+import { getDiariesAsync, saveDiaryAsync, updateDiaryAsync, deleteDiaryAsync } from "@/lib/storageHybrid";
 import { toast } from "@/hooks/use-toast";
 import { Plus, BookOpen, Edit, Trash2, Save, X } from "lucide-react";
 import {
@@ -41,12 +42,21 @@ const DiaryPage = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadDiaries();
+    void loadDiaries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadDiaries = () => {
-    const userDiaries = getDiaries(user?.id || null);
-    setDiaries(userDiaries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  const loadDiaries = async () => {
+    try {
+      const userDiaries = await getDiariesAsync(user?.id || null);
+      setDiaries(userDiaries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    } catch (err: any) {
+      toast({
+        title: "불러오기 실패",
+        description: err?.message ?? "일기 목록을 불러오지 못했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNew = () => {
@@ -73,7 +83,7 @@ const DiaryPage = () => {
     setMood("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!content.trim()) {
       toast({
         title: "오류",
@@ -83,37 +93,53 @@ const DiaryPage = () => {
       return;
     }
 
-    if (editingId) {
-      updateDiary(editingId, { date, content, mood: mood || undefined });
+    try {
+      if (editingId) {
+        await updateDiaryAsync(editingId, user?.id || null, { date, content, mood: mood || undefined });
+        toast({
+          title: "수정 완료",
+          description: "일기가 수정되었습니다.",
+        });
+      } else {
+        await saveDiaryAsync({
+          userId: user?.id || null,
+          date,
+          content,
+          mood: mood || undefined,
+        });
+        toast({
+          title: "저장 완료",
+          description: "일기가 저장되었습니다.",
+        });
+      }
+
+      await loadDiaries();
+      handleCancel();
+    } catch (err: any) {
       toast({
-        title: "수정 완료",
-        description: "일기가 수정되었습니다.",
-      });
-    } else {
-      saveDiary({
-        userId: user?.id || null,
-        date,
-        content,
-        mood: mood || undefined,
-      });
-      toast({
-        title: "저장 완료",
-        description: "일기가 저장되었습니다.",
+        title: "저장 실패",
+        description: err?.message ?? "저장 중 오류가 발생했습니다.",
+        variant: "destructive",
       });
     }
-
-    loadDiaries();
-    handleCancel();
   };
 
-  const handleDelete = (id: string) => {
-    deleteDiary(id);
-    toast({
-      title: "삭제 완료",
-      description: "일기가 삭제되었습니다.",
-    });
-    loadDiaries();
-    setDeleteId(null);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDiaryAsync(id, user?.id || null);
+      toast({
+        title: "삭제 완료",
+        description: "일기가 삭제되었습니다.",
+      });
+      await loadDiaries();
+      setDeleteId(null);
+    } catch (err: any) {
+      toast({
+        title: "삭제 실패",
+        description: err?.message ?? "삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

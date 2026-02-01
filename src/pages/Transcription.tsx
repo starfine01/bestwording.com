@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentUser } from "@/lib/auth";
-import { getTranscriptions, saveTranscription, Transcription } from "@/lib/storage";
+import { Transcription } from "@/lib/storage";
+import { getTranscriptionsAsync, saveTranscriptionAsync } from "@/lib/storageHybrid";
 import { gutenbergBooks, searchBooks, getBookById, getAllCategories, GutenbergBook } from "@/lib/gutenberg";
 import { toast } from "@/hooks/use-toast";
 import { Plus, BookOpen, X, Save, Search, Book, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -40,16 +41,25 @@ const TranscriptionPage = () => {
   const [isSentenceMode, setIsSentenceMode] = useState(false);
 
   useEffect(() => {
-    loadTranscriptions();
+    void loadTranscriptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     filterBooks();
   }, [searchQuery, selectedCategory]);
 
-  const loadTranscriptions = () => {
-    const userTranscriptions = getTranscriptions(user?.id || null);
-    setTranscriptions(userTranscriptions);
+  const loadTranscriptions = async () => {
+    try {
+      const userTranscriptions = await getTranscriptionsAsync(user?.id || null);
+      setTranscriptions(userTranscriptions);
+    } catch (err: any) {
+      toast({
+        title: "불러오기 실패",
+        description: err?.message ?? "필사 목록을 불러오지 못했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filterBooks = () => {
@@ -158,7 +168,7 @@ const TranscriptionPage = () => {
     setIsSentenceMode(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!originalText.trim() || !transcribedText.trim()) {
       toast({
         title: "오류",
@@ -168,20 +178,28 @@ const TranscriptionPage = () => {
       return;
     }
 
-    saveTranscription({
-      userId: user?.id || null,
-      originalText,
-      transcribedText,
-      reflection: reflection || "",
-    });
+    try {
+      await saveTranscriptionAsync({
+        userId: user?.id || null,
+        originalText,
+        transcribedText,
+        reflection: reflection || "",
+      });
 
-    toast({
-      title: "저장 완료",
-      description: "필사가 저장되었습니다.",
-    });
+      toast({
+        title: "저장 완료",
+        description: "필사가 저장되었습니다.",
+      });
 
-    loadTranscriptions();
-    handleCancel();
+      await loadTranscriptions();
+      handleCancel();
+    } catch (err: any) {
+      toast({
+        title: "저장 실패",
+        description: err?.message ?? "저장 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   const categories = ["all", ...getAllCategories()];
