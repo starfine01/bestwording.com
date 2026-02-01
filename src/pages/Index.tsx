@@ -5,14 +5,13 @@ import { SparklesCore } from "@/components/ui/sparkles";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, Target, Zap, CheckCircle2, PenTool, BookOpen, Trophy, FileText } from "lucide-react";
-import { getCurrentUser, isAdmin } from "@/lib/auth";
+// (auth not used here yet)
 import { VisitCounter } from "@/components/VisitCounter";
 
 const Index = () => {
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
-  const isUserAdmin = isAdmin(currentUser);
-  
+  // (Auth state can be used here later for personalized CTA)
+
   const features = [
     {
       icon: PenTool,

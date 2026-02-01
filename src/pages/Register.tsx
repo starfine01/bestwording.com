@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { register } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       toast({
         title: "오류",
@@ -35,12 +36,21 @@ const Register = () => {
       return;
     }
 
-    const user = register(email, password, name);
-    toast({
-      title: "회원가입 성공",
-      description: `${user.name}님 환영합니다!`,
-    });
-    navigate("/");
+    try {
+      await signUp(email, password);
+      // NOTE: name 저장은 profiles 테이블 도입 후 upsert로 처리할 예정.
+      toast({
+        title: "회원가입 요청 완료",
+        description: "이메일 인증이 필요할 수 있어요. 메일함을 확인해 주세요.",
+      });
+      navigate("/");
+    } catch (err: any) {
+      toast({
+        title: "회원가입 실패",
+        description: err?.message ?? "회원가입 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

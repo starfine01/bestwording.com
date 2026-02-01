@@ -1,7 +1,7 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, logout, isAdmin } from "@/lib/auth";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Home, 
   PenTool, 
@@ -100,17 +100,11 @@ const LogoIcon = () => {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const { user, signOut, isAdmin: isUserAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isUserAdmin = isAdmin(currentUser);
 
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, [location.pathname]);
-
-  const handleLogout = () => {
-    logout();
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 
@@ -162,7 +156,7 @@ const Layout = ({ children }: LayoutProps) => {
               </div>
             </div>
             <div className="border-t pt-4">
-              {currentUser ? (
+              {user ? (
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                     <User className="h-4 w-4 text-primary" />
@@ -174,10 +168,10 @@ const Layout = ({ children }: LayoutProps) => {
                       className="flex-1 min-w-0"
                     >
                       <p className="text-sm font-medium text-neutral-700 dark:text-neutral-200 truncate">
-                        {currentUser.name}
+                        {user.user_metadata?.name || user.email}
                       </p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                        {currentUser.email}
+                        {user.email}
                       </p>
                     </motion.div>
                   )}
@@ -227,7 +221,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="hidden md:flex items-center space-x-2 ml-4">
                   {navItems
                     .filter((item) => {
-                      if (!currentUser) {
+                      if (!user) {
                         // 비회원은 글쓰기와 필사만 보이게
                         return item.href === "/writing" || item.href === "/transcription";
                       }
@@ -252,12 +246,12 @@ const Layout = ({ children }: LayoutProps) => {
               </div>
             )}
             <div className="flex items-center space-x-4">
-              {currentUser && (
+              {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="hidden md:flex">
                       <User className="mr-2 h-4 w-4" />
-                      {currentUser.name}
+                      {user.user_metadata?.name || user.email}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -277,7 +271,7 @@ const Layout = ({ children }: LayoutProps) => {
                 </DropdownMenu>
               )}
             </div>
-            {!currentUser && (
+            {!user && (
               <div className="hidden md:flex items-center space-x-2">
                 <Button
                   variant="ghost"

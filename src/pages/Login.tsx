@@ -4,27 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { login } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = login(email, password);
-    if (user) {
+    try {
+      await signIn(email, password);
       toast({
         title: "로그인 성공",
-        description: `${user.name}님 환영합니다!`,
+        description: "환영합니다!",
       });
       navigate("/");
-    } else {
+    } catch (err: any) {
       toast({
         title: "로그인 실패",
-        description: "이메일 또는 비밀번호가 올바르지 않습니다.",
+        description: err?.message ?? "이메일 또는 비밀번호가 올바르지 않습니다.",
         variant: "destructive",
       });
     }
