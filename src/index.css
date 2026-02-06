@@ -108,27 +108,7 @@ All colors MUST be HSL.
   }
 }
 
-/* Aptta 폰트 정의 */
-@font-face {
-  font-family: 'Aptta';
-  src: url('/fonts/Aptta-Regular.woff2') format('woff2'),
-       url('/fonts/Aptta-Regular.woff') format('woff'),
-       url('/fonts/Aptta-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Aptta';
-  src: url('/fonts/Aptta-Bold.woff2') format('woff2'),
-       url('/fonts/Aptta-Bold.woff') format('woff'),
-       url('/fonts/Aptta-Bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-
+/* 브랜드 타이틀 폰트 */
 .best-wording-title {
-  font-family: 'Aptta', 'NanumBarunGothic', sans-serif;
+  font-family: 'NanumBarunGothic', 'Noto Sans KR', sans-serif;
 }
