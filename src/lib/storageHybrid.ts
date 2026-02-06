@@ -198,8 +198,18 @@ export const saveTranscriptionAsync = async (input: Omit<Transcription, "id" | "
 
 export const getAdminMessagesAsync = async (userId: string | null, isAdmin: boolean) => {
   if (!userId) return local.getAdminMessages(userId);
-  // TODO: admin view-all via service role endpoint
-  if (isAdmin) return local.getAdminMessages();
+  if (isAdmin) {
+    const response = await fetch("/api/admin-messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "list" }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error ?? "관리자 메시지 조회 실패");
+    }
+    return (payload?.data ?? []).map(mapAdminMessage);
+  }
   const rows = await listAdminMessages(userId);
   return rows.map(mapAdminMessage);
 };
@@ -223,8 +233,18 @@ export const updateAdminMessageAsync = async (
   updates: Partial<AdminMessage>
 ) => {
   if (!userId) return local.updateAdminMessage(id, updates);
-  // TODO: admin update via service role endpoint
-  if (isAdmin) return local.updateAdminMessage(id, updates);
+  if (isAdmin) {
+    const response = await fetch("/api/admin-messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "update", payload: { id, updates } }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error ?? "관리자 메시지 업데이트 실패");
+    }
+    return mapAdminMessage(payload.data);
+  }
   const row = await updateAdminMessageRow(id, {
     userId,
     title: updates.title,
@@ -235,6 +255,17 @@ export const updateAdminMessageAsync = async (
 
 export const deleteAdminMessageAsync = async (id: string, userId: string | null, isAdmin: boolean) => {
   if (!userId) return local.deleteAdminMessage(id);
-  if (isAdmin) return local.deleteAdminMessage(id);
+  if (isAdmin) {
+    const response = await fetch("/api/admin-messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", payload: { id } }),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error ?? "관리자 메시지 삭제 실패");
+    }
+    return;
+  }
   await deleteAdminMessageRow(id, userId);
 };
