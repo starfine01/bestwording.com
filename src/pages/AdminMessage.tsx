@@ -32,6 +32,7 @@ const AdminMessagePage = () => {
   const [content, setContent] = useState("");
   const [adminReply, setAdminReply] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   useEffect(() => {
     void loadMessages();
@@ -170,6 +171,19 @@ const AdminMessagePage = () => {
     }
   };
 
+  const handleMarkRead = async (messageId: string, isRead: boolean) => {
+    try {
+      await updateAdminMessageAsync(messageId, user?.id || null, isUserAdmin, { isRead } as any);
+      await loadMessages();
+    } catch (err: any) {
+      toast({
+        title: "상태 변경 실패",
+        description: err?.message ?? "읽음 상태 변경에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleReply = async (messageId: string) => {
     if (!adminReply.trim()) {
       toast({
@@ -205,6 +219,10 @@ const AdminMessagePage = () => {
   };
 
   const viewingMessage = messages.find(m => m.id === viewingId);
+  const filteredMessages = isUserAdmin && showUnreadOnly
+    ? messages.filter((m) => !m.isRead)
+    : messages;
+  const unreadCount = messages.filter((m) => !m.isRead).length;
 
   return (
     <div className="space-y-6">
@@ -222,6 +240,21 @@ const AdminMessagePage = () => {
           </Button>
         )}
       </div>
+
+      {isUserAdmin && !isEditing && !viewingMessage && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={showUnreadOnly ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowUnreadOnly((prev) => !prev)}
+          >
+            {showUnreadOnly ? "전체 보기" : "안 읽은 것만"}
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            안 읽음 {unreadCount}건 / 전체 {messages.length}건
+          </div>
+        </div>
+      )}
 
       {isEditing ? (
         <Card>
@@ -295,6 +328,15 @@ const AdminMessagePage = () => {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
+                {isUserAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleMarkRead(viewingMessage.id, !viewingMessage.isRead)}
+                  >
+                    {viewingMessage.isRead ? "안읽음" : "읽음"}
+                  </Button>
+                )}
                 {(isUserAdmin || viewingMessage.userId === user?.id) && (
                   <Button variant="outline" size="sm" onClick={() => handleEdit(viewingMessage)}>
                     <Edit className="h-4 w-4" />
@@ -368,7 +410,7 @@ const AdminMessagePage = () => {
               </CardContent>
             </Card>
           ) : (
-            messages.map((message) => (
+            filteredMessages.map((message) => (
               <Card key={message.id} className="flex flex-col cursor-pointer hover:shadow-lg transition-all" onClick={() => handleView(message)}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
