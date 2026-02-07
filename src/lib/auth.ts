@@ -66,6 +66,7 @@ export const getCurrentUser = (): User | null => {
 
 export const logout = (): void => {
   // best-effort (기존 동기 시그니처 유지)
+  if (!supabase) return;
   void supabase.auth.signOut();
 };
 

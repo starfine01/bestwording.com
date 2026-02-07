@@ -21,6 +21,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
+    if (!supabase) {
+      setSession(null);
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
     supabase.auth
       .getSession()
       .then(({ data, error }) => {
@@ -53,22 +61,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const adminEmails = new Set(["starfine@naver.com"]);
     const isAdmin = !!user?.email && adminEmails.has(user.email);
 
+    const notReady = async () => {
+      throw new Error("Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
+    };
+
     return {
       session,
       user,
       loading,
-      signIn: async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      },
-      signUp: async (email: string, password: string) => {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-      },
-      signOut: async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-      },
+      signIn: supabase
+        ? async (email: string, password: string) => {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+          }
+        : notReady,
+      signUp: supabase
+        ? async (email: string, password: string) => {
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) throw error;
+          }
+        : notReady,
+      signOut: supabase
+        ? async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+          }
+        : notReady,
       isAdmin,
     };
   }, [session, user, loading]);
