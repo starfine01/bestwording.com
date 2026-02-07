@@ -201,6 +201,22 @@ const AdminMessagePage = () => {
         isRead: true,
       } as any);
 
+      if (isUserAdmin && viewingMessage?.userEmail) {
+        try {
+          await fetch("/api/notify-user-reply", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              userEmail: viewingMessage.userEmail,
+              title: viewingMessage.title,
+              adminReply,
+            }),
+          });
+        } catch {
+          // ignore
+        }
+      }
+
       toast({
         title: "답변 완료",
         description: "답변이 저장되었습니다.",

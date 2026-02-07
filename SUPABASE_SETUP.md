@@ -63,8 +63,17 @@ POST /api/admin-messages
 }
 ```
 
-## 5) 체크리스트
+## 5) 알림(Resend)
+운영진 답변 메일 발송을 위해 아래 환경 변수를 추가합니다.
+
+```
+RESEND_API_KEY=...
+USER_REPLY_FROM=BestWording <no-reply@bestwording.com>
+```
+
+## 6) 체크리스트
 - [ ] `schema.sql` 적용 완료
 - [ ] `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` 세팅
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` 세팅
+- [ ] `RESEND_API_KEY`/`USER_REPLY_FROM` 세팅
 - [ ] 관리자 계정 이메일이 `src/lib/auth.ts`의 `adminEmails`에 포함됨
